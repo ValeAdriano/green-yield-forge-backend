@@ -1,0 +1,73 @@
+# Exemplo de docker-compose para testar os serviços locais
+# Modifique 'seu-usuario-dockerhub' pelo seu usuário do Docker Hub
+
+version: '3.8'
+
+services:
+  bff:
+    image: seu-usuario-dockerhub/bff:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - MS_PROJECTS_URL=http://ms-projects:8081
+      - MS_ORDERS_URL=http://ms-orders:8082
+    networks:
+      - green-yield-forge-network
+
+  ms-projects:
+    image: seu-usuario-dockerhub/ms-projects:latest
+    ports:
+      - "8081:8081"
+    environment:
+      - PORT=8081
+      - MONGODB_URI=mongodb://mongodb:27017/green-yield-forge
+    depends_on:
+      - mongodb
+    networks:
+      - green-yield-forge-network
+
+  ms-orders:
+    image: seu-usuario-dockerhub/ms-orders:latest
+    ports:
+      - "8082:8082"
+    environment:
+      - PORT=8082
+      - DB_SERVER=sqlserver
+      - DB_USER=sa
+      - DB_PASSWORD=YourStrong@Passw0rd
+      - DB_NAME=green-yield-forge
+    depends_on:
+      - sqlserver
+    networks:
+      - green-yield-forge-network
+
+  mongodb:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - green-yield-forge-network
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=YourStrong@Passw0rd
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    networks:
+      - green-yield-forge-network
+
+networks:
+  green-yield-forge-network:
+    driver: bridge
+
+volumes:
+  mongodb-data:
+  sqlserver-data:
+

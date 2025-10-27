@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  bff:
+    build:
+      context: ./services/bff
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - MS_PROJECTS_BASE_URL=http://ms-projects:8081
+      - MS_ORDERS_BASE_URL=http://ms-orders:8082
+      - FN_INGEST_URL=http://localhost:8090
+      - FN_RECEIPT_URL=http://localhost:8091
+    depends_on:
+      - ms-projects
+      - ms-orders
+    networks:
+      - green-yield-forge-network
+
+  ms-projects:
+    build:
+      context: ./services/ms-projects
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      - PORT=8081
+      - MONGODB_URI=mongodb://mongodb:27017/green-yield-forge
+    depends_on:
+      - mongodb
+    networks:
+      - green-yield-forge-network
+
+  ms-orders:
+    build:
+      context: ./services/ms-orders
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    environment:
+      - PORT=8082
+      - DB_SERVER=sqlserver
+      - DB_USER=sa
+      - DB_PASSWORD=YourStrong@Passw0rd
+      - DB_NAME=green-yield-forge
+    depends_on:
+      - sqlserver
+    networks:
+      - green-yield-forge-network
+
+  mongodb:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - green-yield-forge-network
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=YourStrong@Passw0rd
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    networks:
+      - green-yield-forge-network
+
+networks:
+  green-yield-forge-network:
+    driver: bridge
+
+volumes:
+  mongodb-data:
+  sqlserver-data:
