@@ -1,0 +1,154 @@
+### ============================================
+### HEALTH CHECKS
+### ============================================
+
+### MS-Projects Health
+GET http://localhost:8081/healthz
+
+### MS-Orders Health
+GET http://localhost:8082/healthz
+
+### BFF Health
+GET http://localhost:8080/healthz
+
+### ============================================
+### PROJECTS (via BFF)
+### ============================================
+
+### List all projects
+GET http://localhost:8080/projects
+
+### Create a project
+POST http://localhost:8080/projects
+Content-Type: application/json
+
+{
+  "name": "Fazenda Aurora",
+  "location": "PR",
+  "hectares": 200,
+  "certifier": "Verra"
+}
+
+### Get a project by ID (SUBSTITUA <id>)
+GET http://localhost:8080/projects/<id>
+
+### Update a project (SUBSTITUA <id>)
+PUT http://localhost:8080/projects/<id>
+Content-Type: application/json
+
+{
+  "name": "Fazenda Aurora Updated",
+  "location": "SC",
+  "hectares": 250,
+  "certifier": "Verra"
+}
+
+### Delete a project (SUBSTITUA <id>)
+DELETE http://localhost:8080/projects/<id>
+
+### ============================================
+### BATCHES (via BFF)
+### ============================================
+
+### List all batches
+GET http://localhost:8080/batches
+
+### Create a batch (SUBSTITUA <projectId>)
+POST http://localhost:8080/batches
+Content-Type: application/json
+
+{
+  "projectId": "<projectId>",
+  "tonsCO2": 40,
+  "pricePerTon": 15,
+  "status": "AVAILABLE"
+}
+
+### Get a batch by ID (SUBSTITUA <id>)
+GET http://localhost:8080/batches/<id>
+
+### Update a batch (SUBSTITUA <id>)
+PUT http://localhost:8080/batches/<id>
+Content-Type: application/json
+
+{
+  "projectId": "<projectId>",
+  "tonsCO2": 50,
+  "pricePerTon": 18,
+  "status": "SOLD"
+}
+
+### Delete a batch (SUBSTITUA <id>)
+DELETE http://localhost:8080/batches/<id>
+
+### ============================================
+### ORDERS (via BFF)
+### ============================================
+
+### List all orders
+GET http://localhost:8080/orders
+
+### Create an order (SUBSTITUA <projectId> e <batchId>)
+POST http://localhost:8080/orders
+Content-Type: application/json
+
+{
+  "projectId": "<projectId>",
+  "batchId": "<batchId>",
+  "buyerName": "Empresa Y",
+  "qtyTons": 20,
+  "total": 300,
+  "status": "PENDING"
+}
+
+### Get an order by ID (SUBSTITUA <id>)
+GET http://localhost:8080/orders/<id>
+
+### Update an order (SUBSTITUA <id>)
+PUT http://localhost:8080/orders/<id>
+Content-Type: application/json
+
+{
+  "status": "CONFIRMED"
+}
+
+### Delete an order (SUBSTITUA <id>)
+DELETE http://localhost:8080/orders/<id>
+
+### ============================================
+### AGGREGATE
+### ============================================
+
+### Get aggregated project data (SUBSTITUA <id>)
+GET http://localhost:8080/aggregate/project/<id>
+
+### ============================================
+### EVENTS
+### ============================================
+
+### Simulate credit ingestion
+POST http://localhost:8080/events/ingest
+Content-Type: application/json
+
+{
+  "project": {
+    "name": "Fazenda Solar",
+    "location": "MG",
+    "hectares": 150,
+    "certifier": "Gold Standard"
+  },
+  "batch": {
+    "tonsCO2": 30,
+    "pricePerTon": 20,
+    "status": "AVAILABLE"
+  }
+}
+
+### Simulate receipt hook (SUBSTITUA <orderId>)
+POST http://localhost:8080/events/receipt
+Content-Type: application/json
+
+{
+  "orderId": "<orderId>"
+}
+

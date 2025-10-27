@@ -1,0 +1,228 @@
+openapi: 3.0.0
+info:
+  title: BFF API
+  version: 1.0.0
+  description: Backend for Frontend - API agregadora e proxy
+paths:
+  /healthz:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: Service is healthy
+  /aggregate/project/{id}:
+    get:
+      summary: Aggregate project data
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Aggregated project data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  project:
+                    $ref: '#/components/schemas/Project'
+                  batches:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Batch'
+                  lastOrders:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Order'
+  /projects:
+    get:
+      summary: List projects
+      responses:
+        '200':
+          description: List of projects
+    post:
+      summary: Create a project
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Project'
+      responses:
+        '201':
+          description: Project created
+  /projects/{id}:
+    get:
+      summary: Get a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Project details
+    put:
+      summary: Update a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Project updated
+    delete:
+      summary: Delete a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Project deleted
+  /batches:
+    get:
+      summary: List batches
+      responses:
+        '200':
+          description: List of batches
+    post:
+      summary: Create a batch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Batch'
+      responses:
+        '201':
+          description: Batch created
+  /batches/{id}:
+    get:
+      summary: Get a batch
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Batch details
+    put:
+      summary: Update a batch
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Batch updated
+    delete:
+      summary: Delete a batch
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Batch deleted
+  /orders:
+    get:
+      summary: List orders
+      responses:
+        '200':
+          description: List of orders
+    post:
+      summary: Create an order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Order'
+      responses:
+        '201':
+          description: Order created
+  /orders/{id}:
+    get:
+      summary: Get an order
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order details
+    put:
+      summary: Update an order
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order updated
+    delete:
+      summary: Delete an order
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Order deleted
+  /events/ingest:
+    post:
+      summary: Trigger credit ingestion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '202':
+          description: Event accepted
+  /events/receipt:
+    post:
+      summary: Trigger receipt processing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                orderId:
+                  type: string
+      responses:
+        '202':
+          description: Event accepted
+components:
+  schemas:
+    Project:
+      type: object
+    Batch:
+      type: object
+    Order:
+      type: object
+

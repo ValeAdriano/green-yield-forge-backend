@@ -1,0 +1,122 @@
+### ============================================
+### MS-PROJECTS API - Green Yield Forge
+### Porta: 8081
+### ============================================
+
+### Health Check
+GET http://localhost:8081/healthz
+
+### Swagger Documentation
+GET http://localhost:8081/api-docs
+
+### ============================================
+### PROJECTS API
+### ============================================
+
+### List all projects (paginated)
+GET http://localhost:8081/projects?page=1&pageSize=10
+
+### Search projects by name
+GET http://localhost:8081/projects?search=aurora
+
+### Create a new project
+POST http://localhost:8081/projects
+Content-Type: application/json
+
+{
+  "name": "Fazenda Aurora",
+  "location": "PR",
+  "hectares": 200,
+  "description": "Projeto de reflorestamento na Mata Atlântica",
+  "certifier": "Verra"
+}
+
+### Get a project by ID (SUBSTITUA <id>)
+GET http://localhost:8081/projects/<id>
+
+### Update a project (SUBSTITUA <id>)
+PUT http://localhost:8081/projects/<id>
+Content-Type: application/json
+
+{
+  "name": "Fazenda Aurora Updated",
+  "location": "SC",
+  "hectares": 250,
+  "certifier": "Gold Standard"
+}
+
+### Delete a project (SUBSTITUA <id>)
+DELETE http://localhost:8081/projects/<id>
+
+### ============================================
+### BATCHES API
+### ============================================
+
+### List all batches (paginated)
+GET http://localhost:8081/batches?page=1&pageSize=10
+
+### List batches by projectId (SUBSTITUA <projectId>)
+GET http://localhost:8081/batches?projectId=<projectId>
+
+### List batches by status
+GET http://localhost:8081/batches?status=AVAILABLE
+
+### Create a batch (SUBSTITUA <projectId>)
+POST http://localhost:8081/batches
+Content-Type: application/json
+
+{
+  "projectId": "<projectId>",
+  "tonsCO2": 40,
+  "pricePerTon": 15,
+  "status": "AVAILABLE"
+}
+
+### Get a batch by ID (SUBSTITUA <id>)
+GET http://localhost:8081/batches/<id>
+
+### Update a batch (SUBSTITUA <id>)
+PUT http://localhost:8081/batches/<id>
+Content-Type: application/json
+
+{
+  "projectId": "<projectId>",
+  "tonsCO2": 50,
+  "pricePerTon": 18,
+  "status": "SOLD"
+}
+
+### Partial update a batch
+PUT http://localhost:8081/batches/<id>
+Content-Type: application/json
+
+{
+  "status": "RESERVED"
+}
+
+### Delete a batch (SUBSTITUA <id>)
+DELETE http://localhost:8081/batches/<id>
+
+### ============================================
+### VALIDATION TESTS
+### ============================================
+
+### Test invalid project creation (should fail)
+POST http://localhost:8081/projects
+Content-Type: application/json
+
+{
+  "name": "",
+  "location": ""
+}
+
+### Test invalid batch creation (should fail)
+POST http://localhost:8081/batches
+Content-Type: application/json
+
+{
+  "projectId": "",
+  "tonsCO2": -10,
+  "pricePerTon": -5
+}
+

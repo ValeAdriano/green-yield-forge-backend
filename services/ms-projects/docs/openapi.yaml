@@ -1,0 +1,178 @@
+openapi: 3.0.0
+info:
+  title: MS Projects API
+  version: 1.0.0
+  description: API para gerenciamento de projetos e lotes de créditos de carbono
+paths:
+  /healthz:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: Service is healthy
+  /projects:
+    get:
+      summary: List all projects
+      responses:
+        '200':
+          description: List of projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Project'
+    post:
+      summary: Create a new project
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Project'
+      responses:
+        '201':
+          description: Project created
+  /projects/{id}:
+    get:
+      summary: Get a project by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Project details
+        '404':
+          description: Project not found
+    put:
+      summary: Update a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Project'
+      responses:
+        '200':
+          description: Project updated
+    delete:
+      summary: Delete a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Project deleted
+  /batches:
+    get:
+      summary: List batches
+      parameters:
+        - name: projectId
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of batches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Batch'
+    post:
+      summary: Create a new batch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Batch'
+      responses:
+        '201':
+          description: Batch created
+  /batches/{id}:
+    get:
+      summary: Get a batch by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Batch details
+    put:
+      summary: Update a batch
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Batch'
+      responses:
+        '200':
+          description: Batch updated
+    delete:
+      summary: Delete a batch
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Batch deleted
+components:
+  schemas:
+    Project:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        location:
+          type: string
+        hectares:
+          type: number
+        certifier:
+          type: string
+        createdAt:
+          type: string
+    Batch:
+      type: object
+      properties:
+        id:
+          type: string
+        projectId:
+          type: string
+        tonsCO2:
+          type: number
+        pricePerTon:
+          type: number
+        status:
+          type: string
+        createdAt:
+          type: string
+
