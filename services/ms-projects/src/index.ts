@@ -7,7 +7,7 @@ import { z } from "zod";
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 
-const PORT = Number(process.env.PORT || 8081);
+const PORT = Number(process.env.PORT || 8080);
 const MONGODB_URI = process.env.MONGODB_URI!;
 const DB_NAME = process.env.DB_NAME || "pjbl";
 
@@ -120,7 +120,7 @@ const idToObj = (doc: any) => (doc ? ({ id: doc._id.toString(), ...doc }) : null
  *                 version:
  *                   type: string
  */
-app.get("/healthz", (_req, res) => res.json({ status: "ok", service: "ms-projects", version: "1.0.0" }));
+app.get("/healthz", (_req, res) => res.status(200).send("ok"));
 
 // Projects
 /**

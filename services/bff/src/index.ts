@@ -12,7 +12,7 @@ const MS_ORDERS   = process.env.MS_ORDERS_BASE_URL!;
 const FN_INGEST   = process.env.FN_INGEST_URL!;
 const FN_RECEIPT  = process.env.FN_RECEIPT_URL!;
 
-app.get("/healthz", (_req, res) => res.json({ status: "ok", service: "bff" }));
+app.get("/healthz", (_req, res) => res.status(200).send("ok"));
 
 app.get("/aggregate/project/:id", async (req, res) => {
   try {

@@ -6,10 +6,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const PORT = Number(process.env.PORT || 8082);
+const PORT = Number(process.env.PORT || 8080);
 const SQL_CONN = process.env.SQL_CONN!;
 
-app.get("/healthz", (_req, res) => res.json({ status: "ok", service: "ms-orders" }));
+app.get("/healthz", (_req, res) => res.status(200).send("ok"));
 
 app.get("/orders", async (req, res) => {
   const pool = await sql.connect(SQL_CONN);
