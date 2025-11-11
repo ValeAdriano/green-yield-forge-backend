@@ -1,23 +1,32 @@
-name: Publish BFF
+name: publish-bff
 on:
   push:
-    branches: ["main"]
-    paths: ["services/bff/**"]
+    branches: [ "main" ]
+    paths:
+      - "services/bff/**"
+      - "Dockerfile"
+      - ".github/workflows/docker-publish-bff.yml"
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    defaults:
-      run: { working-directory: services/bff }
     steps:
       - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USER }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - uses: docker/build-push-action@v6
-        with:
-          context: services/bff
-          push: true
-          tags: docker.io/${{ secrets.DOCKERHUB_USER }}/pjbl-carbon-bff:${{ github.sha }}
 
+      - name: Docker login
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USER }}" --password-stdin
+
+      - name: Build image
+        run: |
+          docker build \
+            -t ${{ secrets.DOCKERHUB_USER }}/arqcloud-bff:${{ github.sha }} \
+            -t ${{ secrets.DOCKERHUB_USER }}/arqcloud-bff:latest \
+            --build-arg SERVICE_PATH=services/bff \
+            --build-arg START_CMD="node dist/index.js" \
+            --build-arg HAS_BUILD=true \
+            .
+
+      - name: Push image
+        run: |
+          docker push ${{ secrets.DOCKERHUB_USER }}/arqcloud-bff:${{ github.sha }}
+          docker push ${{ secrets.DOCKERHUB_USER }}/arqcloud-bff:latest
