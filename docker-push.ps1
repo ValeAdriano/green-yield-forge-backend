@@ -6,11 +6,11 @@ param(
     [string]$Version = "1.0.0"
 )
 
-Write-Host "🔐 Fazendo login no Docker Hub..." -ForegroundColor Cyan
+Write-Host "Fazendo login no Docker Hub..." -ForegroundColor Cyan
 docker login -u $DockerUser
 
 Write-Host ""
-Write-Host "📦 Buildando e fazendo push das imagens..." -ForegroundColor Cyan
+Write-Host "Buildando e fazendo push das imagens..." -ForegroundColor Cyan
 
 # BFF
 Write-Host "Building BFF..." -ForegroundColor Yellow
@@ -52,9 +52,8 @@ docker push "$DockerUser/pjbl-projects:$Version"
 docker push "$DockerUser/pjbl-projects:latest"
 
 Write-Host ""
-Write-Host "✅ Todas as imagens foram publicadas com sucesso!" -ForegroundColor Green
-Write-Host "📋 Imagens disponíveis:" -ForegroundColor Cyan
+Write-Host "Todas as imagens foram publicadas com sucesso!" -ForegroundColor Green
+Write-Host "Imagens disponiveis:" -ForegroundColor Cyan
 Write-Host "   - $DockerUser/pjbl-bff:$Version"
 Write-Host "   - $DockerUser/pjbl-orders:$Version"
 Write-Host "   - $DockerUser/pjbl-projects:$Version"
-
