@@ -19,8 +19,8 @@ jobs:
       - name: Build image
         run: |
           docker build \
-            -t ${{ secrets.DOCKERHUB_USER }}/arqcloud-bff:${{ github.sha }} \
-            -t ${{ secrets.DOCKERHUB_USER }}/arqcloud-bff:latest \
+            -t ${{ secrets.DOCKERHUB_USER }}/pjbl-bff:${{ github.sha }} \
+            -t ${{ secrets.DOCKERHUB_USER }}/pjbl-bff:latest \
             --build-arg SERVICE_PATH=services/bff \
             --build-arg START_CMD="node dist/index.js" \
             --build-arg HAS_BUILD=true \
@@ -28,5 +28,5 @@ jobs:
 
       - name: Push image
         run: |
-          docker push ${{ secrets.DOCKERHUB_USER }}/arqcloud-bff:${{ github.sha }}
-          docker push ${{ secrets.DOCKERHUB_USER }}/arqcloud-bff:latest
+          docker push ${{ secrets.DOCKERHUB_USER }}/pjbl-bff:${{ github.sha }}
+          docker push ${{ secrets.DOCKERHUB_USER }}/pjbl-bff:latest

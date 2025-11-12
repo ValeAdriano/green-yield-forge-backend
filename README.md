@@ -116,35 +116,38 @@ Este projeto utiliza um **Dockerfile único na raiz** que pode buildar qualquer 
 
 #### BFF
 ```bash
-docker build -t adrianovale/arqcloud-bff:1.0.0 \
+docker build -t adrianovale/pjbl-bff:1.0.1 \
   --build-arg SERVICE_PATH=services/bff \
   --build-arg START_CMD="node dist/index.js" \
   --build-arg HAS_BUILD=true \
   .
 
-docker push adrianovale/arqcloud-bff:1.0.0
+docker push adrianovale/pjbl-bff:1.0.1
+docker push adrianovale/pjbl-bff:latest
 ```
 
 #### ms-orders
 ```bash
-docker build -t adrianovale/arqcloud-ms-orders:1.0.0 \
+docker build -t adrianovale/pjbl-orders:1.0.1 \
   --build-arg SERVICE_PATH=services/ms-orders \
   --build-arg START_CMD="node dist/index.js" \
   --build-arg HAS_BUILD=true \
   .
 
-docker push adrianovale/arqcloud-ms-orders:1.0.0
+docker push adrianovale/pjbl-orders:1.0.1
+docker push adrianovale/pjbl-orders:latest
 ```
 
 #### ms-projects
 ```bash
-docker build -t adrianovale/arqcloud-ms-projects:1.0.0 \
+docker build -t adrianovale/pjbl-projects:1.0.1 \
   --build-arg SERVICE_PATH=services/ms-projects \
   --build-arg START_CMD="node dist/index.js" \
   --build-arg HAS_BUILD=true \
   .
 
-docker push adrianovale/arqcloud-ms-projects:1.0.0
+docker push adrianovale/pjbl-projects:1.0.1
+docker push adrianovale/pjbl-projects:latest
 ```
 
 ### Parâmetros do Dockerfile
@@ -162,9 +165,9 @@ Ao configurar no **Azure Web App for Containers** ou **Azure Container Apps**:
    - `PORT=8080` (opcional, mas recomendado)
 
 2. **Imagens Docker:**
-   - BFF: `adrianovale/arqcloud-bff:latest`
-   - ms-orders: `adrianovale/arqcloud-ms-orders:latest`
-   - ms-projects: `adrianovale/arqcloud-ms-projects:latest`
+   - BFF: `adrianovale/pjbl-bff:latest`
+   - ms-orders: `adrianovale/pjbl-orders:latest`
+   - ms-projects: `adrianovale/pjbl-projects:latest`
 
 3. **Health Check:**
    - Todos os serviços expõem o endpoint `GET /healthz` que retorna `200 OK`

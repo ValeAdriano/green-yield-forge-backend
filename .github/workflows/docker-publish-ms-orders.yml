@@ -19,8 +19,8 @@ jobs:
       - name: Build image
         run: |
           docker build \
-            -t ${{ secrets.DOCKERHUB_USER }}/arqcloud-ms-orders:${{ github.sha }} \
-            -t ${{ secrets.DOCKERHUB_USER }}/arqcloud-ms-orders:latest \
+            -t ${{ secrets.DOCKERHUB_USER }}/pjbl-orders:${{ github.sha }} \
+            -t ${{ secrets.DOCKERHUB_USER }}/pjbl-orders:latest \
             --build-arg SERVICE_PATH=services/ms-orders \
             --build-arg START_CMD="node dist/index.js" \
             --build-arg HAS_BUILD=true \
@@ -28,5 +28,5 @@ jobs:
 
       - name: Push image
         run: |
-          docker push ${{ secrets.DOCKERHUB_USER }}/arqcloud-ms-orders:${{ github.sha }}
-          docker push ${{ secrets.DOCKERHUB_USER }}/arqcloud-ms-orders:latest
+          docker push ${{ secrets.DOCKERHUB_USER }}/pjbl-orders:${{ github.sha }}
+          docker push ${{ secrets.DOCKERHUB_USER }}/pjbl-orders:latest
