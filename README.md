@@ -97,32 +97,89 @@ npm run dev
 ## Portas
 
 - BFF: 8080
-- ms-projects: 8081
-- ms-orders: 8082
+- ms-projects: 8080
+- ms-orders: 8080
 - ingest-credit: 8090
 - receipt-hook: 8091
+
+> **Nota:** Todos os serviços agora usam PORT=8080 por padrão (configurável via variável de ambiente).
 
 ## Testes
 
 Use o arquivo `requests.http` para testar a API localmente.
 
-## Docker
+## Build & Deploy com Dockerfile único
 
-Build e push das imagens:
+Este projeto utiliza um **Dockerfile único na raiz** que pode buildar qualquer serviço Node.js (TypeScript/JavaScript) através de build-args. Isso padroniza o processo de build e reduz duplicação.
 
+### Build & Push
+
+#### BFF
 ```bash
-# BFF
-cd services/bff && docker build -t docker.io/USERNAME/pjbl-carbon-bff:1.0.0 .
-docker push docker.io/USERNAME/pjbl-carbon-bff:1.0.0
+docker build -t adrianovale/pjbl-bff:1.0.1 \
+  --build-arg SERVICE_PATH=services/bff \
+  --build-arg START_CMD="node dist/index.js" \
+  --build-arg HAS_BUILD=true \
+  .
 
-# ms-projects
-cd services/ms-projects && docker build -t docker.io/USERNAME/pjbl-carbon-ms-projects:1.0.0 .
-docker push docker.io/USERNAME/pjbl-carbon-ms-projects:1.0.0
-
-# ms-orders
-cd services/ms-orders && docker build -t docker.io/USERNAME/pjbl-carbon-ms-orders:1.0.0 .
-docker push docker.io/USERNAME/pjbl-carbon-ms-orders:1.0.0
+docker push adrianovale/pjbl-bff:1.0.1
+docker push adrianovale/pjbl-bff:latest
 ```
+
+#### ms-orders
+```bash
+docker build -t adrianovale/pjbl-orders:1.0.1 \
+  --build-arg SERVICE_PATH=services/ms-orders \
+  --build-arg START_CMD="node dist/index.js" \
+  --build-arg HAS_BUILD=true \
+  .
+
+docker push adrianovale/pjbl-orders:1.0.1
+docker push adrianovale/pjbl-orders:latest
+```
+
+#### ms-projects
+```bash
+docker build -t adrianovale/pjbl-projects:1.0.1 \
+  --build-arg SERVICE_PATH=services/ms-projects \
+  --build-arg START_CMD="node dist/index.js" \
+  --build-arg HAS_BUILD=true \
+  .
+
+docker push adrianovale/pjbl-projects:1.0.1
+docker push adrianovale/pjbl-projects:latest
+```
+
+### Parâmetros do Dockerfile
+
+- `SERVICE_PATH`: Caminho relativo ao serviço (ex: `services/bff`)
+- `START_CMD`: Comando para iniciar o serviço (padrão: `node dist/index.js`)
+- `HAS_BUILD`: Se `true`, executa `tsc` ou `npm run build` durante o build (padrão: `true`)
+
+### Deploy no Azure
+
+Ao configurar no **Azure Web App for Containers** ou **Azure Container Apps**:
+
+1. **App Settings:**
+   - `WEBSITES_PORT=8080` (obrigatório para Azure Web App)
+   - `PORT=8080` (opcional, mas recomendado)
+
+2. **Imagens Docker:**
+   - BFF: `adrianovale/pjbl-bff:latest`
+   - ms-orders: `adrianovale/pjbl-orders:latest`
+   - ms-projects: `adrianovale/pjbl-projects:latest`
+
+3. **Health Check:**
+   - Todos os serviços expõem o endpoint `GET /healthz` que retorna `200 OK`
+   - O Dockerfile inclui um HEALTHCHECK automático configurado para este endpoint
+
+### Dockerfiles Antigos
+
+> **Nota:** Os Dockerfiles individuais em `services/*/Dockerfile` foram mantidos para compatibilidade, mas estão **deprecados**. Use o Dockerfile único da raiz a partir de agora.
+
+### CI/CD
+
+Os workflows do GitHub Actions (`.github/workflows/docker-publish-*.yml`) estão configurados para buildar e publicar automaticamente cada serviço usando o Dockerfile único quando há push na branch `main`.
 
 ## Documentação
 

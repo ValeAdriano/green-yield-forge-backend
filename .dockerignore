@@ -1,0 +1,11 @@
+**/.git
+**/.github
+**/.vscode
+**/node_modules
+**/dist
+**/coverage
+**/.env
+**/.env.*
+**/.DS_Store
+docs/
+

@@ -116,7 +116,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
  *                 version:
  *                   type: string
  */
-app.get("/healthz", (_req, res) => res.json({ status: "ok", service: "ms-projects", version: "1.0.0" }));
+app.get("/healthz", (_req, res) => res.status(200).send("ok"));
 
 // Projects
 /**
