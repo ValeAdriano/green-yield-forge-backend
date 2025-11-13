@@ -1,0 +1,36 @@
+// Prisma schema para MS Projects (MongoDB)
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("MONGODB_URI")
+}
+
+model Project {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  location    String
+  hectares    Float?
+  description String?
+  certifier   String?
+  createdAt   DateTime @default(now())
+
+  @@index([name])
+  @@map("projects")
+}
+
+model Batch {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  projectId  String   @db.ObjectId
+  tonsCO2    Float
+  pricePerTon Float
+  status     String   @default("AVAILABLE")
+  createdAt  DateTime @default(now())
+
+  @@index([projectId])
+  @@index([status])
+  @@map("batches")
+}
+

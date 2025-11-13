@@ -2,14 +2,13 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import morgan from "morgan";
-import { MongoClient, ObjectId } from "mongodb";
+import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 
 const PORT = Number(process.env.PORT || 8081);
-const MONGODB_URI = process.env.MONGODB_URI!;
-const DB_NAME = process.env.DB_NAME || "pjbl";
+const prisma = new PrismaClient();
 
 // Schemas
 const ProjectCreate = z.object({
@@ -95,9 +94,6 @@ const swaggerOptions = {
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-let projects: any, batches: any;
-const idToObj = (doc: any) => (doc ? ({ id: doc._id.toString(), ...doc }) : null);
-
 // Health
 /**
  * @swagger
@@ -151,14 +147,36 @@ app.get("/healthz", (_req, res) => res.json({ status: "ok", service: "ms-project
  *               $ref: '#/components/schemas/PaginatedResponse'
  */
 app.get("/projects", async (req, res) => {
-  const q: any = {};
-  if (req.query.search) q.name = { $regex: String(req.query.search), $options: "i" };
-  const page = Math.max(parseInt(String(req.query.page || "1")), 1);
-  const pageSize = Math.min(Math.max(parseInt(String(req.query.pageSize || "20")), 1), 100);
-  const cursor = projects.find(q).sort({ _id: -1 }).skip((page-1)*pageSize).limit(pageSize);
-  const data = (await cursor.toArray()).map(idToObj);
-  const total = await projects.countDocuments(q);
-  res.json({ data, page, pageSize, total });
+  try {
+    const where: any = {};
+    if (req.query.search) {
+      // Prisma MongoDB suporta contains mas não mode insensitive
+      // Para case-insensitive, usamos uma regex no Prisma Raw ou filtramos depois
+      where.name = { contains: String(req.query.search) };
+    }
+    const page = Math.max(parseInt(String(req.query.page || "1")), 1);
+    const pageSize = Math.min(Math.max(parseInt(String(req.query.pageSize || "20")), 1), 100);
+    
+    const [data, total] = await Promise.all([
+      prisma.project.findMany({
+        where,
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        orderBy: { createdAt: "desc" }
+      }),
+      prisma.project.count({ where })
+    ]);
+    
+    // Filtro case-insensitive manual se necessário
+    const searchTerm = req.query.search ? String(req.query.search).toLowerCase() : null;
+    const filteredData = searchTerm 
+      ? data.filter(p => p.name.toLowerCase().includes(searchTerm))
+      : data;
+    
+    res.json({ data: filteredData, page, pageSize, total });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 /**
@@ -202,11 +220,17 @@ app.get("/projects", async (req, res) => {
  *               $ref: '#/components/schemas/Error'
  */
 app.post("/projects", async (req, res) => {
-  const parsed = ProjectCreate.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
-  const doc = { ...parsed.data, createdAt: new Date().toISOString() };
-  const r = await projects.insertOne(doc);
-  res.status(201).json({ id: r.insertedId.toString(), ...doc });
+  try {
+    const parsed = ProjectCreate.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+    
+    const project = await prisma.project.create({
+      data: parsed.data
+    });
+    res.status(201).json(project);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 /**
@@ -243,11 +267,13 @@ app.post("/projects", async (req, res) => {
  */
 app.get("/projects/:id", async (req, res) => {
   try {
-    const p = await projects.findOne({ _id: new ObjectId(req.params.id) });
-    if (!p) return res.status(404).json({ error: "not found" });
-    res.json(idToObj(p));
-  } catch {
-    res.status(400).json({ error: "invalid id" });
+    const project = await prisma.project.findUnique({
+      where: { id: req.params.id }
+    });
+    if (!project) return res.status(404).json({ error: "not found" });
+    res.json(project);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
   }
 });
 
@@ -301,15 +327,20 @@ app.get("/projects/:id", async (req, res) => {
  *               $ref: '#/components/schemas/Error'
  */
 app.put("/projects/:id", async (req, res) => {
-  const parsed = ProjectUpdate.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
   try {
-    await projects.updateOne({ _id: new ObjectId(req.params.id) }, { $set: parsed.data });
-    const p = await projects.findOne({ _id: new ObjectId(req.params.id) });
-    if (!p) return res.status(404).json({ error: "not found" });
-    res.json(idToObj(p));
-  } catch {
-    res.status(400).json({ error: "invalid id" });
+    const parsed = ProjectUpdate.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+    
+    const project = await prisma.project.update({
+      where: { id: req.params.id },
+      data: parsed.data
+    });
+    res.json(project);
+  } catch (error: any) {
+    if (error.code === "P2025") {
+      return res.status(404).json({ error: "not found" });
+    }
+    res.status(400).json({ error: error.message });
   }
 });
 
@@ -337,11 +368,16 @@ app.put("/projects/:id", async (req, res) => {
  */
 app.delete("/projects/:id", async (req, res) => {
   try {
-    await projects.deleteOne({ _id: new ObjectId(req.params.id) });
-  } catch {
-    return res.status(400).json({ error: "invalid id" });
+    await prisma.project.delete({
+      where: { id: req.params.id }
+    });
+    res.status(204).end();
+  } catch (error: any) {
+    if (error.code === "P2025") {
+      return res.status(404).json({ error: "not found" });
+    }
+    res.status(400).json({ error: error.message });
   }
-  res.status(204).end();
 });
 
 // Batches
@@ -378,15 +414,28 @@ app.delete("/projects/:id", async (req, res) => {
  *               $ref: '#/components/schemas/PaginatedResponse'
  */
 app.get("/batches", async (req, res) => {
-  const q: any = {};
-  if (req.query.projectId) q.projectId = String(req.query.projectId);
-  if (req.query.status) q.status = String(req.query.status);
-  const page = Math.max(parseInt(String(req.query.page || "1")), 1);
-  const pageSize = Math.min(Math.max(parseInt(String(req.query.pageSize || "20")), 1), 100);
-  const cursor = batches.find(q).sort({ _id: -1 }).skip((page-1)*pageSize).limit(pageSize);
-  const data = (await cursor.toArray()).map(idToObj);
-  const total = await batches.countDocuments(q);
-  res.json({ data, page, pageSize, total });
+  try {
+    const where: any = {};
+    if (req.query.projectId) where.projectId = String(req.query.projectId);
+    if (req.query.status) where.status = String(req.query.status);
+    
+    const page = Math.max(parseInt(String(req.query.page || "1")), 1);
+    const pageSize = Math.min(Math.max(parseInt(String(req.query.pageSize || "20")), 1), 100);
+    
+    const [data, total] = await Promise.all([
+      prisma.batch.findMany({
+        where,
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        orderBy: { createdAt: "desc" }
+      }),
+      prisma.batch.count({ where })
+    ]);
+    
+    res.json({ data, page, pageSize, total });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 /**
@@ -431,11 +480,17 @@ app.get("/batches", async (req, res) => {
  *               $ref: '#/components/schemas/Error'
  */
 app.post("/batches", async (req, res) => {
-  const parsed = BatchCreate.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
-  const doc = { ...parsed.data, createdAt: new Date().toISOString() };
-  const r = await batches.insertOne(doc);
-  res.status(201).json({ id: r.insertedId.toString(), ...doc });
+  try {
+    const parsed = BatchCreate.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+    
+    const batch = await prisma.batch.create({
+      data: parsed.data
+    });
+    res.status(201).json(batch);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
 /**
@@ -464,11 +519,13 @@ app.post("/batches", async (req, res) => {
  */
 app.get("/batches/:id", async (req, res) => {
   try {
-    const b = await batches.findOne({ _id: new ObjectId(req.params.id) });
-    if (!b) return res.status(404).json({ error: "not found" });
-    res.json(idToObj(b));
-  } catch {
-    res.status(400).json({ error: "invalid id" });
+    const batch = await prisma.batch.findUnique({
+      where: { id: req.params.id }
+    });
+    if (!batch) return res.status(404).json({ error: "not found" });
+    res.json(batch);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
   }
 });
 
@@ -509,15 +566,20 @@ app.get("/batches/:id", async (req, res) => {
  *         description: Invalid ID or validation error
  */
 app.put("/batches/:id", async (req, res) => {
-  const parsed = BatchUpdate.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
   try {
-    await batches.updateOne({ _id: new ObjectId(req.params.id) }, { $set: parsed.data });
-    const b = await batches.findOne({ _id: new ObjectId(req.params.id) });
-    if (!b) return res.status(404).json({ error: "not found" });
-    res.json(idToObj(b));
-  } catch {
-    res.status(400).json({ error: "invalid id" });
+    const parsed = BatchUpdate.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+    
+    const batch = await prisma.batch.update({
+      where: { id: req.params.id },
+      data: parsed.data
+    });
+    res.json(batch);
+  } catch (error: any) {
+    if (error.code === "P2025") {
+      return res.status(404).json({ error: "not found" });
+    }
+    res.status(400).json({ error: error.message });
   }
 });
 
@@ -541,22 +603,24 @@ app.put("/batches/:id", async (req, res) => {
  */
 app.delete("/batches/:id", async (req, res) => {
   try {
-    await batches.deleteOne({ _id: new ObjectId(req.params.id) });
-  } catch {
-    return res.status(400).json({ error: "invalid id" });
+    await prisma.batch.delete({
+      where: { id: req.params.id }
+    });
+    res.status(204).end();
+  } catch (error: any) {
+    if (error.code === "P2025") {
+      return res.status(404).json({ error: "not found" });
+    }
+    res.status(400).json({ error: error.message });
   }
-  res.status(204).end();
 });
 
-new MongoClient(MONGODB_URI).connect().then(client => {
-  const db = client.db(DB_NAME);
-  projects = db.collection("projects");
-  batches  = db.collection("batches");
-  projects.createIndex?.({ name: 1 }).catch(()=>{});
-  batches.createIndex?.({ projectId: 1 }).catch(()=>{});
-  app.listen(PORT, () => console.log(`MS-Projects on :${PORT}`));
-}).catch(err => {
-  console.error("Mongo connection failed:", err.message);
-  process.exit(1);
+app.listen(PORT, () => {
+  console.log(`MS-Projects on :${PORT}`);
+  console.log(`Swagger docs available at http://localhost:${PORT}/api-docs`);
 });
 
+// Graceful shutdown
+process.on("beforeExit", async () => {
+  await prisma.$disconnect();
+});
