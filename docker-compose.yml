@@ -1,0 +1,52 @@
+services:
+  bff:
+    build:
+      context: ./services/bff
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - MS_PROJECTS_BASE_URL=http://ms-projects:8081
+      - MS_ORDERS_BASE_URL=http://ms-orders:8082
+      - FN_INGEST_URL=http://localhost:8090
+      - FN_RECEIPT_URL=http://localhost:8091
+    depends_on:
+      - ms-projects
+      - ms-orders
+    networks:
+      - green-yield-forge-network
+
+  ms-projects:
+    build:
+      context: ./services/ms-projects
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    env_file:
+      - .env
+    environment:
+      - PORT=8081
+      # MONGODB_URI será lido do arquivo .env
+    networks:
+      - green-yield-forge-network
+
+  ms-orders:
+    build:
+      context: ./services/ms-orders
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    env_file:
+      - .env
+    environment:
+      - PORT=8082
+      # SQLSERVER_URL será lido do arquivo .env
+    networks:
+      - green-yield-forge-network
+
+networks:
+  green-yield-forge-network:
+    driver: bridge
+
+

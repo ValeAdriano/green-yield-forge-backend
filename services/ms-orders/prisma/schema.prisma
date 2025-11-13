@@ -1,0 +1,27 @@
+// Prisma schema para MS Orders (SQL Server)
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("SQLSERVER_URL")
+}
+
+model Order {
+  id          String    @id @default(uuid())
+  projectId   String    @db.NVarChar(100)
+  batchId     String    @db.NVarChar(100)
+  buyerName   String    @db.NVarChar(200)
+  qtyTons     Float
+  total       Float
+  status      String    @db.NVarChar(50)
+  createdAt   DateTime  @default(now()) @db.DateTime2
+  processedAt DateTime? @db.DateTime2
+
+  @@index([projectId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("orders")
+}
+
